@@ -18,4 +18,4 @@ docker run --rm \
 - `./vendor/bin/sail artisan key:generate` - generate application key  
 - `./vendor/bin/sail artisan migrate` - run db migration
 
-That all, you can access the application on http://localhost/
+That's all, you can access the application on http://localhost/
