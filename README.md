@@ -12,6 +12,7 @@ docker run --rm \
     composer install --ignore-platform-reqs
 ```
 
+- `cp .env.example .env` - copy .env file
 - `./vendor/bin/sail build` - build the project 
 - `./vendor/bin/sail up` - run application 
 - `./vendor/bin/sail artisan key:generate` - generate application key  
