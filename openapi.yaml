@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: NYT Best Sellers API
+  description: A wrapper API for the New York Times Best Sellers History API
+  version: 1.0.0
+  contact:
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api
+
+paths:
+  /v1/best-sellers:
+    get:
+      tags:
+        - Best Sellers
+      summary: Get best sellers list
+      description: Retrieves the best sellers list with optional filters
+      operationId: getBestSellers
+      parameters:
+        - name: author
+          in: query
+          description: Filter by author name
+          schema:
+            type: string
+          example: "Stephen King"
+        - name: isbn[]
+          in: query
+          description: Filter by ISBN (ISBN-10 or ISBN-13)
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          example: ["0593803485", "9780593803486"]
+        - name: title
+          in: query
+          description: Filter by book title
+          schema:
+            type: string
+          example: "The Shining"
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 1000000
+          example: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestSellersResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "The Shining"
+        author:
+          type: string
+          example: "Stephen King"
+        description:
+          type: string
+          example: "A horror novel about a family staying at an isolated hotel"
+        publisher:
+          type: string
+          example: "Doubleday"
+        isbn:
+          type: array
+          items:
+            type: string
+          example: ["0385121679", "9780385121675"]
+        ranks:
+          type: array
+          items:
+            type: object
+          example: []
+    
+    BestSellersResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Best sellers data retrieved successfully"
+        data:
+          type: object
+          properties:
+            best_sellers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Book'
+            count:
+              type: integer
+              example: 1
+        meta:
+          type: object
+          properties:
+            api_version:
+              type: string
+              example: "v1"
+            filters:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                author: "Stephen King"
+    
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          example: "Failed to retrieve best sellers data"
+        meta:
+          type: object
+          properties:
+            api_version:
+              type: string
+              example: "v1"
+    
+    ValidationErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          example: "The given data was invalid"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            isbn.0: ["The isbn.0 must be a valid ISBN (ISBN-10 or ISBN-13)."]
+            offset: ["The offset must be at least 0."]
+        meta:
+          type: object
+          properties:
+            api_version:
+              type: string
+              example: "v1" 

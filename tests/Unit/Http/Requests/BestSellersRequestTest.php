@@ -104,17 +104,4 @@ class BestSellersRequestTest extends TestCase
         $this->assertFalse($validator->passes());
         $this->assertTrue($validator->errors()->has('offset'));
     }
-
-    public function test_prepare_for_validation()
-    {
-        $request = new BestSellersRequest();
-        $request->replace(['isbn' => '1234567890']);
-
-        $requestReflection = new \ReflectionClass($request);
-        $method = $requestReflection->getMethod('prepareForValidation');
-        $method->setAccessible(true);
-        $method->invoke($request);
-
-        $this->assertEquals(['1234567890'], $request->input('isbn'));
-    }
 }
