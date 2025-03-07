@@ -10,6 +10,38 @@ A Laravel-based API wrapper for the New York Times Best Sellers History API.
 - **Parameter Validation**: Robust validation of all input parameters
 - **Error Handling**: Comprehensive error handling with detailed error responses
 - **Standardized Responses**: Consistent API response structure
+- **OpenAPI Documentation**: Complete API specification using OpenAPI 3.0
+- **Data Transfer Objects**: Type-safe domain objects for better maintainability
+- **API Resources**: Clean transformation layer between domain and response
+
+## Architecture
+
+This API wrapper uses a clean, layered architecture:
+
+1. **Controllers**: Handle HTTP requests and responses
+2. **Form Requests**: Validate incoming parameters
+3. **Services**: Interact with the NYT API and transform responses to DTOs
+4. **DTOs** (Data Transfer Objects): Type-safe domain objects representing books
+5. **API Resources**: Transform DTOs into standardized API responses
+
+## API Documentation
+
+The API is fully documented using the OpenAPI 3.0 specification. You can find the documentation in the `openapi.yaml` file at the root of the project.
+
+### Using the OpenAPI Documentation
+
+You can use the OpenAPI documentation in several ways:
+
+1. **View with Swagger UI**: Import the `openapi.yaml` file into [Swagger Editor](https://editor.swagger.io/) for an interactive documentation experience.
+2. **Generate Client Libraries**: Use tools like [OpenAPI Generator](https://openapi-generator.tech/) to generate client libraries for your preferred language.
+3. **Validate Requests/Responses**: Use the specification to validate that your API implementation conforms to the documented contract.
+
+The OpenAPI specification includes:
+- Detailed endpoint descriptions
+- Request parameters and their constraints
+- Response structures and HTTP status codes
+- Example requests and responses
+- Schema definitions for all data models
 
 ## API Endpoints
 
@@ -27,6 +59,25 @@ GET /api/v1/best-sellers
 | isbn[] | string | Filter by ISBN (supports ISBN-10 and ISBN-13) |
 | title | string | Filter by book title |
 | offset | integer | Pagination offset (0-1,000,000) |
+
+### Search Best Sellers (for large filter sets)
+
+```
+POST /api/v1/best-sellers/search
+```
+
+This endpoint provides identical functionality to the GET endpoint but accepts parameters in the request body instead of as query parameters. Use this endpoint when dealing with a large number of filters (especially multiple ISBN values) that might exceed URL length limits.
+
+#### Request Body (JSON)
+
+```json
+{
+  "author": "Stephen King",
+  "isbn": ["0593803485", "9780593803486"],
+  "title": "The Shining",
+  "offset": 0
+}
+```
 
 #### Response Format
 

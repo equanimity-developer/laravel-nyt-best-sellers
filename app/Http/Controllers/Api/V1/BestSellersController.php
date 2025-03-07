@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BestSellersRequest;
+use App\Http\Resources\BookResource;
 use App\Http\Traits\ApiResponder;
 use App\Services\NYTBestSellersService;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +27,7 @@ class BestSellersController extends Controller
 
             return $this->successResponse(
                 [
-                    'best_sellers' => $bestSellers,
+                    'best_sellers' => BookResource::collection($bestSellers),
                     'count' => $bestSellers->count(),
                 ],
                 __('api.best_sellers.retrieved'),
@@ -40,5 +41,10 @@ class BestSellersController extends Controller
                 ['exception' => $e->getMessage()]
             );
         }
+    }
+
+    public function search(BestSellersRequest $request): JsonResponse
+    {
+        return $this->index($request);
     }
 }

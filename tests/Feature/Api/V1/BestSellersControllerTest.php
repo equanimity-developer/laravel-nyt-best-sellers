@@ -6,54 +6,27 @@ namespace Tests\Feature\Api\V1;
 
 use App\Services\NYTBestSellersService;
 use Mockery;
+use Tests\Helpers\ServiceMockBuilder;
 use Tests\TestCase;
+use Tests\Traits\AssertJsonResponseTrait;
 
 class BestSellersControllerTest extends TestCase
 {
+    use AssertJsonResponseTrait;
+
     public function test_index_returns_successful_response()
     {
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->once()
-            ->with([])
-            ->andReturn(collect([
-                [
-                    'title' => 'Test Book',
-                    'author' => 'Test Author',
-                    'description' => 'Test Description',
-                    'publisher' => 'Test Publisher',
-                    'isbn' => ['1234567890', '0987654321'],
-                    'ranks' => [],
-                ]
-            ]));
-
+        $mockService = ServiceMockBuilder::createBestSellersServiceMock();
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $response = $this->getJson('/api/v1/best-sellers');
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'status',
-                'message',
-                'data' => [
-                    'best_sellers',
-                    'count',
-                ],
-                'meta' => [
-                    'api_version',
-                    'filters',
-                ],
-            ])
-            ->assertJson([
-                'status' => 'success',
-                'message' => __('api.best_sellers.retrieved'),
-                'data' => [
-                    'count' => 1,
-                ],
-                'meta' => [
-                    'api_version' => 'v1',
-                ],
-            ]);
+        $this->assertSuccessfulBestSellersResponse($response);
+        $response->assertJson([
+            'data' => [
+                'count' => 1,
+            ],
+        ]);
     }
 
     public function test_index_with_filters()
@@ -68,37 +41,87 @@ class BestSellersControllerTest extends TestCase
             'offset' => 0,
         ];
 
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->once()
-            ->with($filters)
-            ->andReturn(collect([
-                [
-                    'title' => 'Test Title',
-                    'author' => 'Test Author',
-                    'description' => 'Test Description',
-                    'publisher' => 'Test Publisher',
-                    'isbn' => ['1234567890', '1234567890123'],
-                    'ranks' => [],
-                ]
-            ]));
-
+        $mockService = ServiceMockBuilder::createBestSellersServiceMock($filters, [
+            [
+                'title' => 'Test Title',
+                'author' => 'Test Author',
+                'description' => 'Test Description',
+                'publisher' => 'Test Publisher',
+                'isbn' => ['1234567890', '1234567890123'],
+                'ranks' => [],
+            ]
+        ]);
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $response = $this->getJson('/api/v1/best-sellers?'.http_build_query($filters));
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success',
-                'message' => __('api.best_sellers.retrieved'),
-                'data' => [
-                    'count' => 1,
-                ],
-                'meta' => [
-                    'api_version' => 'v1',
-                    'filters' => $filters,
-                ],
-            ]);
+        $this->assertSuccessfulBestSellersResponse($response, $filters);
+        $response->assertJson([
+            'data' => [
+                'count' => 1,
+            ],
+        ]);
+    }
+
+    public function test_search_with_post_request()
+    {
+        $filters = [
+            'author' => 'Test Author',
+            'title' => 'Test Title',
+            'isbn' => [
+                '0593803485',
+                '9780593803486'
+            ],
+            'offset' => 0,
+        ];
+
+        $mockService = ServiceMockBuilder::createBestSellersServiceMock($filters, [
+            [
+                'title' => 'Test Title',
+                'author' => 'Test Author',
+                'description' => 'Test Description',
+                'publisher' => 'Test Publisher',
+                'isbn' => ['1234567890', '1234567890123'],
+                'ranks' => [],
+            ]
+        ]);
+        $this->app->instance(NYTBestSellersService::class, $mockService);
+
+        $response = $this->postJson('/api/v1/best-sellers/search', $filters);
+
+        $this->assertSuccessfulBestSellersResponse($response, $filters);
+        $response->assertJson([
+            'data' => [
+                'count' => 1,
+            ],
+        ]);
+    }
+
+    public function test_search_with_large_isbn_list()
+    {
+        $isbns = [];
+        for ($i = 0; $i < 250; $i++) {
+            $isbns[] = '0593803485';
+            $isbns[] = '9780593803486';
+        }
+
+        $filters = [
+            'author' => 'Test Author',
+            'isbn' => $isbns,
+            'offset' => 0,
+        ];
+
+        $mockService = ServiceMockBuilder::createEmptyResponseServiceMock();
+        $this->app->instance(NYTBestSellersService::class, $mockService);
+
+        $response = $this->postJson('/api/v1/best-sellers/search', $filters);
+
+        $this->assertSuccessfulBestSellersResponse($response, $filters);
+        $response->assertJson([
+            'data' => [
+                'count' => 0,
+            ],
+        ]);
     }
 
     public function test_index_with_invalid_filters()
@@ -120,20 +143,14 @@ class BestSellersControllerTest extends TestCase
 
     public function test_index_handles_service_exception()
     {
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->once()
-            ->andThrow(new \Exception('API Error'));
-
+        $mockService = ServiceMockBuilder::createExceptionThrowingServiceMock(
+            new \Exception('API Error')
+        );
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $response = $this->getJson('/api/v1/best-sellers');
 
-        $response->assertStatus(500)
-            ->assertJson([
-                'status' => 'error',
-                'message' => __('api.best_sellers.failed'),
-            ]);
+        $this->assertFailedApiResponse($response);
     }
 
     protected function tearDown(): void

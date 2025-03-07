@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DTOs\BookDTO;
 use App\Exceptions\NYTApiException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
@@ -94,14 +95,14 @@ class NYTBestSellersService
         $results = $response['results'] ?? [];
 
         return collect($results)->map(function ($book) {
-            return [
+            return BookDTO::fromArray([
                 'title' => $book['title'] ?? null,
                 'author' => $book['author'] ?? null,
                 'description' => $book['description'] ?? null,
                 'publisher' => $book['publisher'] ?? null,
                 'isbn' => $this->extractIsbns($book),
                 'ranks' => $book['ranks_history'] ?? [],
-            ];
+            ]);
         });
     }
 
@@ -140,19 +141,8 @@ class NYTBestSellersService
         }
 
         if (isset($filters['isbn']) && is_array($filters['isbn'])) {
-            $isbns = [];
-
-            foreach ($filters['isbn'] as $isbn) {
-                if (isset($isbn['isbn10'])) {
-                    $isbns[] = $isbn['isbn10'];
-                }
-                if (isset($isbn['isbn13'])) {
-                    $isbns[] = $isbn['isbn13'];
-                }
-            }
-
-            if (!empty($isbns)) {
-                $params['isbn'] = implode(';', $isbns);
+            if (!empty($filters['isbn'])) {
+                $params['isbn'] = implode(';', $filters['isbn']);
             }
         }
 

@@ -7,65 +7,52 @@ namespace Tests\Feature\Api\V1;
 use App\Services\NYTBestSellersService;
 use Illuminate\Http\Client\ConnectionException;
 use Mockery;
+use Tests\Helpers\ServiceMockBuilder;
 use Tests\TestCase;
+use Tests\Traits\AssertJsonResponseTrait;
 
 class BestSellersEdgeCasesTest extends TestCase
 {
+    use AssertJsonResponseTrait;
+
     public function test_handles_connection_timeout()
     {
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->andThrow(new ConnectionException('Connection timed out'));
-
+        $mockService = ServiceMockBuilder::createExceptionThrowingServiceMock(
+            new ConnectionException('Connection timed out')
+        );
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $response = $this->getJson('/api/v1/best-sellers');
 
-        $response->assertStatus(500)
-            ->assertJson([
-                'status' => 'error',
-                'message' => __('api.best_sellers.failed'),
-            ]);
+        $this->assertFailedApiResponse($response);
     }
 
     public function test_handles_server_error()
     {
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->andThrow(new \Exception('Internal Server Error', 500));
-
+        $mockService = ServiceMockBuilder::createExceptionThrowingServiceMock(
+            new \Exception('Internal Server Error', 500)
+        );
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
+        // Make the API call
         $response = $this->getJson('/api/v1/best-sellers');
 
-        $response->assertStatus(500)
-            ->assertJson([
-                'status' => 'error',
-                'message' => __('api.best_sellers.failed'),
-            ]);
+        $this->assertFailedApiResponse($response);
     }
 
     public function test_handles_unexpected_response_structure()
     {
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->andReturn(collect());
-
+        $mockService = ServiceMockBuilder::createEmptyResponseServiceMock();
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $response = $this->getJson('/api/v1/best-sellers');
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success',
-                'message' => __('api.best_sellers.retrieved'),
-                'data' => [
-                    'count' => 0,
-                ],
-                'meta' => [
-                    'api_version' => 'v1',
-                ],
-            ]);
+        $this->assertSuccessfulBestSellersResponse($response);
+        $response->assertJson([
+            'data' => [
+                'count' => 0,
+            ],
+        ]);
     }
 
     public function test_handles_max_offset()
@@ -80,7 +67,7 @@ class BestSellersEdgeCasesTest extends TestCase
     {
         $longAuthorName = str_repeat('a', 1000);
 
-        $response = $this->getJson('/api/v1/best-sellers?author=' . $longAuthorName);
+        $response = $this->getJson('/api/v1/best-sellers?author='.$longAuthorName);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['author']);
@@ -94,15 +81,11 @@ class BestSellersEdgeCasesTest extends TestCase
             $tooManyIsbns[] = '9780593803486';
         }
 
-        $mockService = Mockery::mock(NYTBestSellersService::class);
-        $mockService->shouldReceive('getBestSellers')
-            ->andReturn(collect([]));
-
+        $mockService = ServiceMockBuilder::createEmptyResponseServiceMock();
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
         $queryString = http_build_query(['isbn' => $tooManyIsbns]);
-
-        $response = $this->getJson('/api/v1/best-sellers?' . $queryString);
+        $response = $this->getJson('/api/v1/best-sellers?'.$queryString);
 
         $response->assertStatus(200);
     }
@@ -116,10 +99,9 @@ class BestSellersEdgeCasesTest extends TestCase
         $mockService->shouldReceive('getBestSellers')
             ->with(['author' => $specialChars])
             ->andReturn(collect([]));
-
         $this->app->instance(NYTBestSellersService::class, $mockService);
 
-        $response = $this->getJson('/api/v1/best-sellers?author=' . $encodedChars);
+        $response = $this->getJson('/api/v1/best-sellers?author='.$encodedChars);
 
         $response->assertStatus(200);
     }

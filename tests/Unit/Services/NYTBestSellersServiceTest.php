@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\DTOs\BookDTO;
 use App\Exceptions\NYTApiException;
 use App\Services\NYTBestSellersService;
 use Illuminate\Support\Collection;
@@ -58,25 +59,26 @@ class NYTBestSellersServiceTest extends TestCase
 
         $this->assertInstanceOf(Collection::class, $result);
         $this->assertCount(1, $result);
-        $this->assertEquals('Test Book', $result[0]['title']);
-        $this->assertEquals('Test Author', $result[0]['author']);
-        $this->assertEquals(['1234567890', '1234567890123'], $result[0]['isbn']);
+        $this->assertInstanceOf(BookDTO::class, $result->first());
+        $this->assertEquals('Test Book', $result->first()->title);
+        $this->assertEquals('Test Author', $result->first()->author);
+        $this->assertEquals(['1234567890', '1234567890123'], $result->first()->isbn);
     }
 
     public function test_get_best_sellers_uses_cache()
     {
+        $dto = new BookDTO(
+            'Cached Book',
+            'Cached Author',
+            'Cached Description',
+            'Cached Publisher',
+            ['1234567890'],
+            []
+        );
+
         Cache::shouldReceive('remember')
             ->once()
-            ->andReturn(collect([
-                [
-                    'title' => 'Cached Book',
-                    'author' => 'Cached Author',
-                    'description' => 'Cached Description',
-                    'publisher' => 'Cached Publisher',
-                    'isbn' => ['1234567890'],
-                    'ranks' => [],
-                ]
-            ]));
+            ->andReturn(collect([$dto]));
 
         $service = new NYTBestSellersService();
 
@@ -84,7 +86,9 @@ class NYTBestSellersServiceTest extends TestCase
 
         $this->assertInstanceOf(Collection::class, $result);
         $this->assertCount(1, $result);
-        $this->assertEquals('Cached Book', $result[0]['title']);
+        $this->assertInstanceOf(BookDTO::class, $result->first());
+        $this->assertEquals('Cached Book', $result->first()->title);
+        $this->assertEquals('Cached Author', $result->first()->author);
     }
 
     public function test_handles_api_error()

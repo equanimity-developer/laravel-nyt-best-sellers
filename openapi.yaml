@@ -75,6 +75,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+                
+  /v1/best-sellers/search:
+    post:
+      tags:
+        - Best Sellers
+      summary: Search best sellers list (alternative for large filter sets)
+      description: Alternative POST endpoint for best sellers that accepts the same parameters in the request body. Use this when you have a large number of ISBNs or other filters that might exceed URL length limits.
+      operationId: searchBestSellers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                author:
+                  type: string
+                  example: "Stephen King"
+                isbn:
+                  type: array
+                  items:
+                    type: string
+                  example: ["0593803485", "9780593803486"]
+                title:
+                  type: string
+                  example: "The Shining"
+                offset:
+                  type: integer
+                  minimum: 0
+                  maximum: 1000000
+                  example: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestSellersResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
