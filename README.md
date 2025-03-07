@@ -143,6 +143,8 @@ Tests can be run without an internet connection or valid NYT API credentials:
 ```bash
 php artisan test
 ```
+[![codecov](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers/branch/main/graph/badge.svg)](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers)
+
 
 ## Breaking Changes Strategy
 
