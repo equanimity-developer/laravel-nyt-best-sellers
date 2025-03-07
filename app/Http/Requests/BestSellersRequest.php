@@ -32,21 +32,12 @@ class BestSellersRequest extends FormRequest
             'author.max' => __('api.validation.author.max', ['max' => 100]),
             'isbn.array' => __('api.validation.isbn.array'),
             'isbn.*.string' => __('api.validation.isbn.string'),
-            'isbn.*.regex' => 'Each ISBN must be a valid 10-digit or 13-digit ISBN',
+            'isbn.*.regex' => __('api.validation.isbn.regex'),
             'title.string' => __('api.validation.title.string'),
             'title.max' => __('api.validation.title.max', ['max' => 255]),
             'offset.integer' => __('api.validation.offset.integer'),
             'offset.min' => __('api.validation.offset.min'),
             'offset.max' => __('api.validation.offset.max', ['max' => 1000000]),
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        if ($this->has('isbn') && is_string($this->input('isbn'))) {
-            $this->merge([
-                'isbn' => [$this->input('isbn')]
-            ]);
-        }
     }
 }

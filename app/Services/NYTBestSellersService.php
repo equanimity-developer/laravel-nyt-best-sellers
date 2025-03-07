@@ -126,27 +126,10 @@ class NYTBestSellersService
 
     protected function prepareParameters(array $filters): array
     {
-        $params = [];
-
-        $allowedFilters = [
-            'author',
-            'title',
-            'offset',
-        ];
-
-        foreach ($allowedFilters as $filter) {
-            if (isset($filters[$filter]) && !empty($filters[$filter])) {
-                $params[$filter] = $filters[$filter];
-            }
-        }
-
-        if (isset($filters['isbn']) && is_array($filters['isbn'])) {
-            if (!empty($filters['isbn'])) {
-                $params['isbn'] = implode(';', $filters['isbn']);
-            }
-        }
-
-        return $params;
+        return collect($filters)
+            ->only(['author', 'title', 'offset', 'isbn'])
+            ->filter()
+            ->all();
     }
 
     protected function generateCacheKey(array $filters): string

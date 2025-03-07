@@ -9,12 +9,13 @@ use Illuminate\Http\Response;
 class NYTApiException extends ApiException
 {
     public function __construct(
-        string $message = 'NYT API Error',
+        string $message = null,
         int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR,
         array $errors = [],
         array $meta = [],
         \Throwable $previous = null
     ) {
+        $message = $message ?? __('api.nyt.error');
         parent::__construct($message, $statusCode, $errors, $meta, $previous);
     }
 } 

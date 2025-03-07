@@ -25,9 +25,7 @@ class NYTBestSellersServiceTest extends TestCase
     {
         Cache::shouldReceive('remember')
             ->once()
-            ->andReturnUsing(function ($key, $ttl, $callback) {
-                return $callback();
-            });
+            ->andReturnUsing(fn ($key, $ttl, $callback) => $callback());
 
         Http::fake([
             '*' => Http::response([
@@ -48,7 +46,6 @@ class NYTBestSellersServiceTest extends TestCase
         ]);
 
         $service = new NYTBestSellersService();
-
         $result = $service->getBestSellers(['author' => 'Test Author']);
 
         Http::assertSent(function ($request) {
@@ -81,7 +78,6 @@ class NYTBestSellersServiceTest extends TestCase
             ->andReturn(collect([$dto]));
 
         $service = new NYTBestSellersService();
-
         $result = $service->getBestSellers();
 
         $this->assertInstanceOf(Collection::class, $result);
@@ -91,13 +87,11 @@ class NYTBestSellersServiceTest extends TestCase
         $this->assertEquals('Cached Author', $result->first()->author);
     }
 
-    public function test_handles_api_error()
+    public function test_throws_nyt_api_exception_on_error()
     {
         Cache::shouldReceive('remember')
             ->once()
-            ->andReturnUsing(function ($key, $ttl, $callback) {
-                return $callback();
-            });
+            ->andReturnUsing(fn ($key, $ttl, $callback) => $callback());
 
         Http::fake([
             '*' => Http::response([
@@ -108,9 +102,7 @@ class NYTBestSellersServiceTest extends TestCase
         ]);
 
         $service = new NYTBestSellersService();
-
         $this->expectException(NYTApiException::class);
-
         $service->getBestSellers();
     }
 

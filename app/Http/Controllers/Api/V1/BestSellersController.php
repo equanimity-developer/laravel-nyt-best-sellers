@@ -10,6 +10,7 @@ use App\Http\Resources\BookResource;
 use App\Http\Traits\ApiResponder;
 use App\Services\NYTBestSellersService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class BestSellersController extends Controller
 {
@@ -31,13 +32,13 @@ class BestSellersController extends Controller
                     'count' => $bestSellers->count(),
                 ],
                 __('api.best_sellers.retrieved'),
-                200,
+                Response::HTTP_OK,
                 ['filters' => $filters]
             );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 __('api.best_sellers.failed'),
-                500,
+                Response::HTTP_INTERNAL_SERVER_ERROR,
                 ['exception' => $e->getMessage()]
             );
         }

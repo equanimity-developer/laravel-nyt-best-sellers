@@ -33,9 +33,6 @@ class Isbn implements ValidationRule
                 $fail($this->message());
                 return;
             }
-        } else {
-            $fail($this->message());
-            return;
         }
     }
 
@@ -44,7 +41,7 @@ class Isbn implements ValidationRule
         $sum = 0;
 
         for ($i = 0; $i < 9; $i++) {
-            $sum += (10 - $i) * $isbn[$i];
+            $sum += (10 - $i) * (int)$isbn[$i];
         }
 
         $lastChar = strtoupper($isbn[9]);
