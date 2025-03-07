@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers/branch/main/graph/badge.svg)](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers)
+
 # NYT Best Sellers API Wrapper
 
 A Laravel-based API wrapper for the New York Times Best Sellers History API.
@@ -143,8 +145,6 @@ Tests can be run without an internet connection or valid NYT API credentials:
 ```bash
 php artisan test
 ```
-[![codecov](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers/branch/main/graph/badge.svg)](https://codecov.io/gh/equanimity-developer/laravel-nyt-best-sellers)
-
 
 ## Breaking Changes Strategy
 
