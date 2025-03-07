@@ -28,16 +28,16 @@ class BestSellersRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'author.string' => 'Author must be a text string',
-            'author.max' => 'Author name cannot exceed 100 characters',
-            'isbn.array' => 'ISBN must be provided as an array',
-            'isbn.*.string' => 'Each ISBN must be a string',
+            'author.string' => __('api.validation.author.string'),
+            'author.max' => __('api.validation.author.max', ['max' => 100]),
+            'isbn.array' => __('api.validation.isbn.array'),
+            'isbn.*.string' => __('api.validation.isbn.string'),
             'isbn.*.regex' => 'Each ISBN must be a valid 10-digit or 13-digit ISBN',
-            'title.string' => 'Title must be a text string',
-            'title.max' => 'Title cannot exceed 255 characters',
-            'offset.integer' => 'Offset must be an integer',
-            'offset.min' => 'Offset cannot be negative',
-            'offset.max' => 'Offset cannot exceed 1,000,000',
+            'title.string' => __('api.validation.title.string'),
+            'title.max' => __('api.validation.title.max', ['max' => 255]),
+            'offset.integer' => __('api.validation.offset.integer'),
+            'offset.min' => __('api.validation.offset.min'),
+            'offset.max' => __('api.validation.offset.max', ['max' => 1000000]),
         ];
     }
 

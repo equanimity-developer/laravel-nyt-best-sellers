@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\NYTApiException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -13,14 +14,24 @@ use Illuminate\Support\Facades\Log;
 class NYTBestSellersService
 {
     private string $baseUrl;
-    private string $endpoint = '/lists/best-sellers/history.json'; //move to config
+    private string $endpoint;
     private string $apiKey;
-    private int $cacheTtl = 3600; //move to config
+    private int $cacheTtl;
+    private string $cachePrefix;
+    private int $timeout;
+    private int $retries;
+    private int $retryDelay;
 
     public function __construct()
     {
-        $this->apiKey = config('services.nyt.api_key');
-        $this->baseUrl = config('services.nyt.base_url');
+        $this->apiKey = config('nyt.api.key') ?: config('services.nyt.api_key');
+        $this->baseUrl = config('nyt.api.base_url') ?: config('services.nyt.base_url');
+        $this->endpoint = config('nyt.api.endpoint', '/lists/best-sellers/history.json');
+        $this->cacheTtl = config('nyt.cache.ttl', 3600);
+        $this->cachePrefix = config('nyt.cache.prefix', 'nyt_best_sellers');
+        $this->timeout = config('nyt.api.timeout', 30);
+        $this->retries = config('nyt.api.retries', 3);
+        $this->retryDelay = config('nyt.api.retry_delay', 1000);
     }
 
     public function getBestSellers(array $filters = []): Collection
@@ -44,22 +55,37 @@ class NYTBestSellersService
                 ));
 
             if ($response->failed()) {
-                Log::error('NYT API Error', [
+                Log::error(__('api.nyt.error'), [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
 
-                throw new \Exception('Failed to fetch data from NYT API: '.$response->status());
+                throw new NYTApiException(
+                    __('api.nyt.failed', ['status' => $response->status()]),
+                    $response->status(),
+                    ['response' => $response->json()],
+                    ['filters' => $filters]
+                );
             }
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('NYT API Exception', [
+            Log::error(__('api.nyt.exception'), [
                 'message' => $e->getMessage(),
                 'filters' => $filters,
             ]);
 
-            throw $e;
+            if ($e instanceof NYTApiException) {
+                throw $e;
+            }
+
+            throw new NYTApiException(
+                $e->getMessage(),
+                500,
+                [],
+                ['filters' => $filters],
+                $e
+            );
         }
     }
 
@@ -135,13 +161,13 @@ class NYTBestSellersService
 
     protected function generateCacheKey(array $filters): string
     {
-        return 'nyt_best_sellers:'.md5(json_encode($filters));
+        return $this->cachePrefix . ':' . md5(json_encode($filters));
     }
 
     protected function client(): PendingRequest
     {
         return Http::baseUrl($this->baseUrl)
-            ->timeout(30)
-            ->retry(3, 1000);
+            ->timeout($this->timeout)
+            ->retry($this->retries, $this->retryDelay);
     }
 }

@@ -9,9 +9,6 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class Isbn implements ValidationRule
 {
-    /**
-     * Run the validation rule.
-     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!is_string($value)) {
@@ -70,11 +67,8 @@ class Isbn implements ValidationRule
         return $expectedCheck == $isbn[12];
     }
 
-    /**
-     * Get the validation error message.
-     */
     protected function message(): string
     {
-        return 'The :attribute must be a valid ISBN (ISBN-10 or ISBN-13).';
+        return __('api.validation.isbn.invalid');
     }
 }

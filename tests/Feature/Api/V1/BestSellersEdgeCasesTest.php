@@ -22,7 +22,7 @@ class BestSellersEdgeCasesTest extends TestCase
         $response->assertStatus(500)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'Failed to retrieve best sellers data',
+                'message' => __('api.best_sellers.failed'),
             ]);
     }
 
@@ -39,7 +39,7 @@ class BestSellersEdgeCasesTest extends TestCase
         $response->assertStatus(500)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'Failed to retrieve best sellers data',
+                'message' => __('api.best_sellers.failed'),
             ]);
     }
 
@@ -56,8 +56,12 @@ class BestSellersEdgeCasesTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'status' => 'success',
+                'message' => __('api.best_sellers.retrieved'),
                 'data' => [
                     'count' => 0,
+                ],
+                'meta' => [
+                    'api_version' => 'v1',
                 ],
             ]);
     }

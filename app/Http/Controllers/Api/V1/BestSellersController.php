@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BestSellersRequest;
+use App\Http\Traits\ApiResponder;
 use App\Services\NYTBestSellersService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
 
 class BestSellersController extends Controller
 {
+    use ApiResponder;
+
     public function __construct(readonly private NYTBestSellersService $bestSellersService)
     {
     }
@@ -22,22 +24,21 @@ class BestSellersController extends Controller
             $filters = $request->validated();
             $bestSellers = $this->bestSellersService->getBestSellers($filters);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => [
+            return $this->successResponse(
+                [
                     'best_sellers' => $bestSellers,
                     'count' => $bestSellers->count(),
                 ],
-                'meta' => [
-                    'filters' => $filters,
-                ],
-            ]);
+                __('api.best_sellers.retrieved'),
+                200,
+                ['filters' => $filters]
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to retrieve best sellers data',
-                'error' => $e->getMessage(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                __('api.best_sellers.failed'),
+                500,
+                ['exception' => $e->getMessage()]
+            );
         }
     }
 }

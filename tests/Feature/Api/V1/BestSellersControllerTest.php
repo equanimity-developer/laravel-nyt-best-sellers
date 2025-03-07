@@ -32,18 +32,24 @@ class BestSellersControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'status',
+                'message',
                 'data' => [
                     'best_sellers',
                     'count',
                 ],
                 'meta' => [
+                    'api_version',
                     'filters',
                 ],
             ])
             ->assertJson([
                 'status' => 'success',
+                'message' => __('api.best_sellers.retrieved'),
                 'data' => [
                     'count' => 1,
+                ],
+                'meta' => [
+                    'api_version' => 'v1',
                 ],
             ]);
     }
@@ -82,10 +88,12 @@ class BestSellersControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'status' => 'success',
+                'message' => __('api.best_sellers.retrieved'),
                 'data' => [
                     'count' => 1,
                 ],
                 'meta' => [
+                    'api_version' => 'v1',
                     'filters' => $filters,
                 ],
             ]);
@@ -122,7 +130,7 @@ class BestSellersControllerTest extends TestCase
         $response->assertStatus(500)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'Failed to retrieve best sellers data',
+                'message' => __('api.best_sellers.failed'),
             ]);
     }
 
